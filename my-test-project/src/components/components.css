@@ -1,0 +1,46 @@
+.tabContainer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.tab {
+  background-color: transparent;
+  border: none;
+  color: #000;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px 30px;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: #CA5CF2;
+}
+
+/* Container styles */
+.container {
+  width: 732px;
+}
+
+.container > div {
+  border: 1px solid #000;
+  margin-bottom: 1px;
+  padding: 10px;
+}
+
+/* InputContainer styles */
+.inputContainer {
+  width: 732px;
+  margin-top: 20px;
+}
+
+.inputContainer input {
+  width: 561px;
+  height: 40px;
+  padding: 0 10px;
+}
+
+.inputContainer button {
+  width: 102px;
+  height: 40px;
+}
