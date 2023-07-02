@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import axios, { AxiosError } from 'axios';
+import { set, get } from 'idb-keyval';
+// import { clear } from 'idb-keyval';
 import './components.css';
 
 interface Comment {
@@ -10,7 +12,6 @@ interface Comment {
 }
 
 const postComment = async (comment: Comment): Promise<Comment> => {
-  // Симуляція POST-запиту
   return new Promise((resolve) => setTimeout(() => resolve(comment), 500));
 };
 
@@ -18,16 +19,19 @@ const EventsTab: React.FC = () => {
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
 
-  const { isLoading, isError, error, data } = useQuery('eventsData', () =>
-    axios.get('https://jsonplaceholder.typicode.com/posts').then((res) => res.data)
-  );
+  const { isLoading, isError, error, data } = useQuery('eventsData', async () => {
+    const response = await axios.get('https://jsonplaceholder.typicode.com/posts');
+    const apiData = response.data.slice(0, 4);
+    const localData = await get<Comment[]>('eventsData') || [];
+    return localData.concat(apiData);
+  });
 
   const mutation = useMutation(postComment, {
     onSuccess: (newComment: Comment) => {
-      queryClient.setQueryData<Comment[]>('eventsData', (oldData = []) => [
-        newComment,
-        ...oldData
-      ]);
+      const oldData = queryClient.getQueryData<Comment[]>('eventsData') || [];
+      const newData = [newComment, ...oldData];
+      queryClient.setQueryData<Comment[]>('eventsData', newData);
+      set('eventsData', newData);
     }
   });
 
@@ -46,26 +50,30 @@ const EventsTab: React.FC = () => {
     );
   }
 
+  // #для видалення кешу  
+  // const handleClearCache = async () => {
+  //   await clear();
+  //   queryClient.invalidateQueries('eventsData');
+  // };
+  
   return (
     <div>
       <div className="container">
-        {data?.slice(0, 4).map((item: any) => (
+        {data?.map((item: any) => (
           <div key={item.id}>
             <h3>{item.title}</h3>
             <p>{item.body}</p>
           </div>
         ))}
       </div>
-      <div className="inputContainer">
-        <form onSubmit={handleCommentSubmit}>
+        <form onSubmit={handleCommentSubmit} className="inputContainer">
           <input
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Write a comment"
+            placeholder="Додайте коментар"
           />
-          <button type="submit">Submit</button>
+          <button type="submit">Додати</button>
         </form>
-      </div>
     </div>
   );
 };
