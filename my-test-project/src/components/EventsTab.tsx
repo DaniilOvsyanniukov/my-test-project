@@ -20,10 +20,10 @@ const EventsTab: React.FC = () => {
   const [commentText, setCommentText] = useState('');
 
   const { isLoading, isError, error, data } = useQuery('eventsData', async () => {
+    let localData = await get<Comment[]>('eventsData') || [];
     const response = await axios.get('https://jsonplaceholder.typicode.com/posts');
-    const apiData = response.data.slice(0, 4);
-    const localData = await get<Comment[]>('eventsData') || [];
-    return localData.concat(apiData);
+    if (localData.length ===0 ){localData = response.data.slice(0, 4);}
+    return localData;
   });
 
   const mutation = useMutation(postComment, {
