@@ -36,8 +36,8 @@ const TabComponent: React.FC = () => {
         <button className={`tab ${activeTab === 'resume' ? 'active' : ''}`} onClick={() => setActiveTab('resume')}>Резюме</button>
         <div className={`tab ${activeTab === 'events' ? 'active' : ''}`}>
           <button onClick={() => setActiveTab('events')} style={{cursor: activeTab === 'events' ? 'default' : 'pointer'}}>Події</button>
-          <div ref={dropdownRef}>
-          <button 
+          <div ref={dropdownRef} className="dropdown-container">
+            <button 
               className="dropdown-button"
               onClick={() => { 
                 if (activeTab === 'events') { 
@@ -51,11 +51,16 @@ const TabComponent: React.FC = () => {
             </button>
 
             {isDropdownOpen && (
-              <ul className="dropdown-content show">
+              <div className="dropdown-content show">
+                <p className="dropdown-title">Фільтри подій</p>
                 {eventOptions.map((option, index) => 
-                  <li key={index} onClick={() => handleEventTabClick(option)}>{option}</li>
+                  <label className="checkbox-label" key={index}>
+                    <input type="radio" className="checkbox-input" checked={eventTab === option} onChange={() => handleEventTabClick(option)} />
+                    <span className="checkbox-mark" />
+                    {option}
+                  </label>
                 )}
-              </ul>
+              </div>
             )}
           </div>
         </div>
