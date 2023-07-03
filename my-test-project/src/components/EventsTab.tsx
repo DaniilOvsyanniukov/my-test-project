@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useMutation, useQuery, useQueryClient, QueryClient, hydrate, dehydrate } from 'react-query';
 import axios, { AxiosError } from 'axios';
-import { set, get } from 'idb-keyval';
-// import { clear } from 'idb-keyval';
 import './components.css';
 
 interface Comment {
@@ -19,11 +17,32 @@ const EventsTab: React.FC = () => {
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
 
+  useEffect(() => {
+    // hydrate state from localStorage
+    const dehydratedState = localStorage.getItem('queryClientState')
+    if (dehydratedState) {
+      const state = JSON.parse(dehydratedState);
+      hydrate(queryClient, state);
+    }
+  }, [queryClient])
+
+  useEffect(() => {
+    // listen for changes in the queryCache and save them to localStorage
+    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+      const state = dehydrate(queryClient);
+      localStorage.setItem('queryClientState', JSON.stringify(state));
+    });
+
+    return unsubscribe;
+  }, [queryClient]);
+
   const { isLoading, isError, error, data } = useQuery('eventsData', async () => {
-    let localData = await get<Comment[]>('eventsData') || [];
     const response = await axios.get('https://jsonplaceholder.typicode.com/posts');
-    if (localData.length ===0 ){localData = response.data.slice(0, 4);}
-    return localData;
+    return response.data.slice(0, 4);
+  }, {
+    // Enable page caching
+    staleTime: Infinity,
+    cacheTime: Infinity,
   });
 
   const mutation = useMutation(postComment, {
@@ -31,7 +50,6 @@ const EventsTab: React.FC = () => {
       const oldData = queryClient.getQueryData<Comment[]>('eventsData') || [];
       const newData = [newComment, ...oldData];
       queryClient.setQueryData<Comment[]>('eventsData', newData);
-      set('eventsData', newData);
     }
   });
 
@@ -50,12 +68,6 @@ const EventsTab: React.FC = () => {
     );
   }
 
-  // #для видалення кешу  
-  // const handleClearCache = async () => {
-  //   await clear();
-  //   queryClient.invalidateQueries('eventsData');
-  // };
-  
   return (
     <div>
       <div className="container">
